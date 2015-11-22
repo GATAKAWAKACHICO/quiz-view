@@ -1,0 +1,140 @@
+<!doctype html>
+<html>
+  <head>
+    <title>管理側 - クイズ表示</title>
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="../static.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html {height:100%;}
+      body { font: 13px Helvetica, Arial; background: #3c8fef; height:100%;}
+      #quiz-text {
+        padding:10px;
+        color:white;
+        -moz-border-radius: 20px;
+        -webkit-border-radius: 20px;
+        border-radius: 20px;
+        /*IE 7 AND 8 DO NOT SUPPORT BORDER RADIUS*/
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr = '#150fff', endColorstr = '#91e9ff');
+        /*INNER ELEMENTS MUST NOT BREAK THIS ELEMENTS BOUNDARIES*/
+        /*Element must have a height (not auto)*/
+        /*All filters must be placed together*/
+        -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr = '#150fff', endColorstr = '#91e9ff')";
+        /*Element must have a height (not auto)*/
+        /*All filters must be placed together*/
+        background-image: -moz-linear-gradient(top, #150fff, #91e9ff);
+        background-image: -ms-linear-gradient(top, #150fff, #91e9ff);
+        background-image: -o-linear-gradient(top, #150fff, #91e9ff);
+        background-image: -webkit-gradient(linear, center top, center bottom, from(#150fff), to(#91e9ff));
+        background-image: -webkit-linear-gradient(top, #150fff, #91e9ff);
+        background-image: linear-gradient(top, #150fff, #91e9ff);
+        -moz-background-clip: padding;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+        /*Use "background-clip: padding-box" when using rounded corners to avoid the gradient bleeding through the corners*/
+        /*--IE9 WILL PLACE THE FILTER ON TOP OF THE ROUNDED CORNERS--*/
+      }
+      #choice-table {
+        width:100%;
+        height:70%;
+        display:none;
+      }
+      #choice-table td {
+        width:50%;
+        height:50%;
+        position:relative;
+        text-align:center;
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-size: contain;
+      }
+      #choice-table img {
+        max-width:100%;
+        height:50%;
+        width:50%;
+        position:relative;
+        z-index:1;
+      }
+      .choice-circle {
+        -moz-border-radius: 50px;
+        -webkit-border-radius: 50px;
+        border-radius: 50px;
+        width:50px;
+        height:50px;
+        z-index:2;
+        display:table-cell;
+        vertical-align:middle;
+        position:absolute;
+        padding-top:20px;
+      }
+      .answer-sum {
+        position:absolute;
+        bottom: 0;
+        right:0;
+        z-index:2;
+        font-size: 2em;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="quiz-text" style="width:100%;text-align:center;"><h3>ここに質問が表示されます。</h3></div>
+    <table id="choice-table">
+      <tr>
+        <td id="choice1"><span class="text h1"></span><span class="choice-circle label label-primary">１</span><span id="sum-choice1" class="answer-sum label label-default"></span></td>
+        <td id="choice2"><span class="text h1"></span><span class="choice-circle label label-danger">２</span><span id="sum-choice2" class="answer-sum label label-default"></span></td>
+      </tr>
+      <tr>
+        <td id="choice3"><span class="text h1"></span><span class="choice-circle label label-success">３</span><span id="sum-choice3" class="answer-sum label label-default"></span></td>
+        <td id="choice4"><span class="text h1"></span><span class="choice-circle label label-warning">４</span><span id="sum-choice4" class="answer-sum label label-default"></span></td>
+      </tr>
+    </table>
+    <script>
+      var socket = io(socket_url);
+      socket.on('chat message', function(msg){
+        // console.log(msg)
+        if (msg.admin == true) {
+          if(msg.type == "quiz"){
+              $("#choice-table td").css({"background-color":"","background-image":"none", "color":"white", opacity:"1.0"});
+              $("#choice-table").show();
+              $(".answer-sum").empty();
+              $("#choice-table .text").empty();
+              $("#quiz-text h3").html(msg.content);
+              var regex = /^https?/
+              if(regex.test(msg.imageurls[0])){
+                $("#choice-table #choice1").css({"background-image" : "url('" + msg.imageurls[0] + "')" });
+                $("#choice-table #choice2").css({"background-image" : "url('" + msg.imageurls[1] + "')" });
+                $("#choice-table #choice3").css({"background-image" : "url('" + msg.imageurls[2] + "')" });
+                $("#choice-table #choice4").css({"background-image" : "url('" + msg.imageurls[3] + "')" });
+              }else{
+                $("#choice-table #choice1 .text").html(msg.choices[0]);
+                $("#choice-table #choice2 .text").html(msg.choices[1]);
+                $("#choice-table #choice3 .text").html(msg.choices[2]);
+                $("#choice-table #choice4 .text").html(msg.choices[3]);
+              }
+          }
+          if(msg.type == "answer-sum"){
+             $("#sum-choice1").html(msg.content.choice1);
+             $("#sum-choice2").html(msg.content.choice2);
+             $("#sum-choice3").html(msg.content.choice3);
+             $("#sum-choice4").html(msg.content.choice4);
+          }
+          if(msg.type == "answer"){
+              answer_number = msg.content;
+              choice_dom = "td#choice" + answer_number;
+              $("#choice-table td").css({opacity:"0.5"});
+              $(choice_dom).css({"background-color":"yellow", "color":"red", "opacity":"1.0"});
+          }
+        }
+      });
+     </script>
+  </body>
+</html>

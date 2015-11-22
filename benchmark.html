@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+    <title>ベンチマーク</title>
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="static.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+    </style>
+  </head>
+  <body>
+      <div id="isEmit"></div>
+      <script>
+        var socket = io(socket_url);
+        var time_answer_mills = Math.floor( Math.random() * (10000 - 1 + 1) ) + 1
+        setTimeout(function() {
+          answer();
+        }, time_answer_mills);
+        function answer(){
+          name = Math.random().toString(36).slice(-8);
+          socket.emit('chat message', {"admin":false, "type":"answered", "name" : name, "answer" : Math.floor( Math.random() * (4 - 1 + 1) ) + 1, "time": time_answer_mills / 1000 } );
+          $("#isEmit").html(name+"<br/>"+time_answer_mills);
+        }
+      </script>
+  </body>
+</html>

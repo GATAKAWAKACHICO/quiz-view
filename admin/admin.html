@@ -1,0 +1,315 @@
+<!doctype html>
+<html>
+  <head>
+    <title>管理側</title>
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="../static.js"></script>
+    <script src="../PapaParse-4.1.2/papaparse.min.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      .trimming { width: 100px; height: 100px; overflow: hidden; float:left; text-align:center;}
+      .trimming img{ height: 100px; }
+    </style>
+  </head>
+  <body>
+  <div style="padding:10px;">
+    <p>現在の接続数:<span id="connection-count"></span></p>
+    <p>
+    <form id="opening-form">
+      <audio id="sound-opening" preload="auto">
+        <source src="../opening2.mp3" type="audio/mp3">
+      </audio>
+      <button class="btn btn-default" id="opening" style="visibility:hidden;">（使わない）クイズオープニング用</button>
+    </form>
+    </p>
+
+    <p>
+    <form id="cm-enter-form" style="float:left;">
+      <audio id="sound-cm-enter" preload="auto">
+        <source src="../cmtsunagi.mp3" type="audio/mp3">
+      </audio>
+      <button class="btn btn-default" id="opening">クイズオープニング用</button>
+    </form>
+    <form id="tatata-form" style="">
+      <audio id="sound-tatata" preload="auto">
+        <source src="../tatata.mp3" type="audio/mp3">
+      </audio>
+      <button class="btn btn-default" id="opening">スタンドアップ</button>
+    </form>
+    <span style="clear:both;">
+    </p>
+
+    <hr/>
+
+    <p>
+    <form id="quiz-load-form">
+      <div class="input-group">
+        <label for="csvurl">問題CSVファイルのURL</label>
+        <input type="text" class="form-control" id="csvurl" placeholder="http://183.181.174.67/quiz/quizlist.csv" value="http://183.181.174.67/quiz/quizlist.csv?version=">
+      </div>
+      <div id="quiz-load-status">CSVファイルを指定してください。</div>
+      <button class="btn btn-default" id="quiz-load">ファイルを読み込む</button>
+    </form>
+    </p>
+
+    <hr/>
+
+    <p>
+    <form id="quiz-parse-form">
+      <div class="input-group">
+        <label for="current-row">問題設定中の行</label>
+        <input type="text" class="form-control" id="current-row" placeholder="1" value="1" autocomplete="off">
+      </div>
+      <button class="btn btn-default" id="quiz-display-quizbody">問題文を読み込む</button>
+    </form>
+    </p>
+
+    <hr/>
+
+    <p>
+    <form id="starter-form">
+      <audio id="sound-starter" preload="auto">
+        <source src="../starter.mp3" type="audio/mp3">
+      </audio>
+      <button class="btn btn-default" id="starter">出題スタート音</button>
+    </form>
+    </p>
+
+    <p>
+    <form id="broadcast-form">
+      <div class="input-group">
+        <label for="quizbody">問題文</label>
+        <textarea class="form-control" id="quizbody" rows="5" cols="70"></textarea>
+      </div>
+      <div id="image-check">
+      </div>
+      <div style="clear:both;"></div>
+      <button class="btn btn-default" id="broadcast">配信する</button>
+    </form>
+    </p>
+
+    <p>
+    <form id="ready-go-form">
+      <audio id="sound-file" preload="auto">
+        <source src="../readygo.mp3" type="audio/mp3">
+      </audio>
+      <button class="btn btn-primary" id="ready-go">カウントスタート音</button>
+    </form>
+    </p>
+
+    <p>
+    <form id="finish-form">
+      <button class="btn btn-danger" id="finish">途中停止</button>
+    </form>
+    </p>
+
+    <p>
+    <form id="answer-sum-form">
+      <audio id="sound-answer-sum" preload="auto">
+        <source src="../sum.mp3" type="audio/mp3">
+      </audio>
+      <button class="btn btn-primary" id="answer-sum">集計音</button>
+    </form>
+    </p>
+
+    <p>
+    <form id="answer-check-form">
+      <audio id="sound-answer-check" preload="auto">
+        <source src="../answer_check2.mp3" type="audio/mp3">
+      </audio>
+      <label for="answer-select">解答</label>
+      <select id="answer-select" class="form-control">
+        <option>1</option>
+        <option>2</option>
+        <option>3</option>
+        <option>4</option>
+      </select>
+      <button class="btn btn-warning" id="answer-check">アンサーチェック音</button>
+    </form>
+    </p>
+
+    <p>
+    <form id="round-finish-gong-form">
+      <audio id="round-finish-gong" preload="auto">
+        <source src="../gong-played3.mp3" type="audio/mp3">
+      </audio>
+      <button class="btn btn-primary" id="round-finish-gong-button">ラウンド終了ゴング音</button>
+    </form>
+    </p>
+
+    <hr/>
+
+    <p>
+    <form id="round-reset-form">
+      <span>※不正解のユーザーが復活（クイズができるように）します<br/></span>
+      <span class="text-danger">押した後配信二回押す！<br/></span>
+      <button class="btn btn-success" id="round-reset">ラウンドリセット</button>
+    </form>
+    </p>
+
+    <hr/>
+
+    <p>
+    <form id="remove-all-form">
+      ※ユーザー自体を削除します。スコアも消えます。<br/>
+      <button class="btn btn-danger" id="round-reset">全データ削除</button>
+    </form>
+    </p>
+
+  </div>
+    <script>
+      var socket = io(socket_url);
+      var $connection_count = $('#connection-count');
+      setInterval(function(){
+          socket.emit('chat message', {"admin":true, "type":"check", "content" : ""});
+      },3000);
+      var csv;
+      $('#opening-form').submit(function(){
+        $("#sound-opening").get(0).play();
+        return false;
+      });
+      $('#tatata-form').submit(function(){
+        $("#sound-tatata").get(0).play();
+        return false;
+      });
+      $('#cm-enter-form').submit(function(){
+        $("#sound-cm-enter").get(0).play();
+        return false;
+      });
+      $('#quiz-load-form').submit(function(){
+        $("#quiz-load-status").html("読み込み中…");
+        Papa.parse($("#csvurl").val(), {
+          download: true,
+          complete: function(results) {
+            csv = results;
+            console.log(csv);
+            if(csv.errors.length > 0){
+              $("#quiz-load-status").html("エラーが発生しました。");
+            }else{
+              $("#quiz-load-status").html("読み込み完了");
+            }
+          }
+        });
+        return false;
+      });
+      $('#quiz-parse-form').submit(function(){
+        current_row = $("#current-row").val();
+        // 問題文を構成
+        quiztext = csv.data[current_row][0] + "<br/>";
+        quizchoice = "";
+        quizchoice += "1　" + csv.data[current_row][4] + "　";
+        quizchoice += "2　" + csv.data[current_row][5] + "　";
+        quizchoice += "3　" + csv.data[current_row][6] + "　";
+        quizchoice += "4　" + csv.data[current_row][7] + "　";
+        quizbody = quiztext + quizchoice;
+        $('#quizbody').val(quizbody);
+        // 画像を表示
+        quizimage = "";
+        quizimage += '<div class="trimming"><img src="' + csv.data[current_row][8] + '"></div>'
+        quizimage += '<div class="trimming"><img src="' + csv.data[current_row][9] + '"></div>'
+        quizimage += '<div class="trimming"><img src="' + csv.data[current_row][10] + '"></div>'
+        quizimage += '<div class="trimming"><img src="' + csv.data[current_row][11] + '"></div>'
+        $('#image-check').html(quizimage);
+        // 回答を設定
+        $('#answer-select').val(csv.data[current_row][3]);
+        return false;
+      });
+      $('#starter-form').submit(function(){
+        $("#sound-starter").get(0).play();
+        return false;
+      });
+      $('#broadcast-form').submit(function(){
+        imageurls = [
+          'data' in csv ? csv.data[current_row][8] : "",
+          'data' in csv ? csv.data[current_row][9] : "",
+          'data' in csv ? csv.data[current_row][10] : "",
+          'data' in csv ? csv.data[current_row][11] : ""
+        ];
+        choices = [
+          'data' in csv ? csv.data[current_row][4] : "",
+          'data' in csv ? csv.data[current_row][5] : "",
+          'data' in csv ? csv.data[current_row][6] : "",
+          'data' in csv ? csv.data[current_row][7] : "",
+        ];
+        socket.emit('chat message', {"admin":true, 
+          "type":"quiz", 
+          "content" : $('#quizbody').val(),
+          "imageurls" : imageurls,
+          "choices" : choices } );
+        return false;
+      });
+      $('#finish-form').submit(function(){
+        socket.emit('chat message', {"admin":true, "type":"finish", "content" : ""} );
+        return false;
+      });
+      $('#ready-go-form').submit(function(){
+        $("#sound-file").get(0).play();
+        socket.emit('chat message', {"admin":true, "type":"start", "content" : "" } );
+        return false;
+      });
+      $("#sound-file").on('ended', function(){
+        socket.emit('chat message', {"admin":true, "type":"finish", "content" : ""} );
+      });
+      $('#answer-sum-form').submit(function(){
+        socket.emit('chat message', {"admin":true, "type":"question-answer"});
+        return false;
+      });
+      $('#answer-check-form').submit(function(){
+        $("#sound-answer-check").get(0).play();
+        socket.emit('chat message', {"admin":true, "type":"answer", "content" : $('#answer-select').val()} );
+        return false;
+      });
+      $('#round-finish-gong-form').submit(function(){
+        $("#round-finish-gong").get(0).play();
+        return false;
+      });
+      $('#round-reset-form').submit(function(){
+        socket.emit('chat message', {"admin":true, "type":"round-reset"});
+        return false;
+      });
+      $('#remove-all-form').submit(function(){
+        socket.emit('chat message', {"admin":true, "type":"remove-all"});
+        return false;
+      });
+      socket.on('chat message', function(msg){
+        console.log(msg)
+        if(msg.admin == true){
+          if(msg.type == "data-connection-count"){
+            // コネクション数を集計する
+            $connection_count.text(msg.content);
+          }
+          if(msg.type == "data-answer-sum"){
+            console.log(msg.content);
+            // 集計結果を初期化する
+            var answer_sum = {"choice1":0, "choice2":0, "choice3":0,"choice4":0 };
+            if(msg.content){
+            for (var i = 0, len = msg.content.length; i < len; i++) {
+              data = msg.content[i];
+              if(data.answer == "1") { answer_sum.choice1 += 1 };
+              if(data.answer == "2") { answer_sum.choice2 += 1 };
+              if(data.answer == "3") { answer_sum.choice3 += 1 };
+              if(data.answer == "4") { answer_sum.choice4 += 1 };
+            }
+            }
+            // 集計結果を計算する
+            socket.emit('chat message', {"admin":true, "type":"answer-sum", "content" : answer_sum } );
+            $("#sound-answer-sum").get(0).play();
+          }
+          if(msg.type == "data-point-ranking"){
+            console.log(msg.content);
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

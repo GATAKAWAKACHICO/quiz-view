@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+  <head>
+    <title>管理側 - 早押しワースト10</title>
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="../static.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; background: #3c8fef;}
+      #show-result {
+        padding:10px;
+        color:white;
+        -moz-border-radius: 20px;
+        -webkit-border-radius: 20px;
+        border-radius: 20px;
+        /*IE 7 AND 8 DO NOT SUPPORT BORDER RADIUS*/
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr = '#150fff', endColorstr = '#ff0000');
+        /*INNER ELEMENTS MUST NOT BREAK THIS ELEMENTS BOUNDARIES*/
+        /*Element must have a height (not auto)*/
+        /*All filters must be placed together*/
+        -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr = '#150fff', endColorstr = '#ff0000')";
+        /*Element must have a height (not auto)*/
+        /*All filters must be placed together*/
+        background-image: -moz-linear-gradient(top, #150fff, #ff0000);
+        background-image: -ms-linear-gradient(top, #150fff, #ff0000);
+        background-image: -o-linear-gradient(top, #150fff, #ff0000);
+        background-image: -webkit-gradient(linear, center top, center bottom, from(#150fff), to(#ff0000));
+        background-image: -webkit-linear-gradient(top, #150fff, #ff0000);
+        background-image: linear-gradient(top, #150fff, #ff0000);
+        -moz-background-clip: padding;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+        /*Use "background-clip: padding-box" when using rounded corners to avoid the gradient bleeding through the corners*/
+        /*--IE9 WILL PLACE THE FILTER ON TOP OF THE ROUNDED CORNERS--*/
+      }
+      .table-bordered { border: 0px; }
+      #result-table td { border-radius:10px; font-weight:bold; color:yellow; }
+      #result-table tr.not-worst { background-color: darkblue; }
+      #result-table td.not-worst { text-align:center; }
+      #result-table td.worst { background-color: red; text-align:center; }
+    </style>
+  </head>
+  <body>
+  <div id="show-result" style="width:100%;text-align:center;"><h2>早押しワースト10</h2></div>
+    <form id="show-result-form">
+      <audio id="sound-file" preload="auto">
+        <source src="../result_late.mp3" type="audio/mp3">
+      </audio>
+    </form>
+
+    <table id="result-table" class="table">
+    </table>
+
+    <script>
+      /* var answers = [
+        {"admin": false, "answer": "2", "name": "まさき", "time": "11.494"},
+        {"admin": false, "answer": "2", "name": "まさき", "time": "2.494"},
+        {"admin": false, "answer": "2", "name": "まさき", "time": "2.594"},
+        {"admin": false, "answer": "2", "name": "まさき", "time": "0.494"},
+        {"admin": false, "answer": "2", "name": "まさき", "time": "1.494"},
+        {"admin": false, "answer": "2", "name": "まさき", "time": "5.494"},
+        {"admin": false, "answer": "2", "name": "まさき", "time": "4.494"},
+        {"admin": false, "answer": "2", "name": "まさき", "time": "3.494"},
+        {"admin": false, "answer": "2", "name": "まさき", "time": "3.494"},
+        {"admin": false, "answer": "2", "name": "まさき", "time": "3.123"},
+        {"admin": false, "answer": "2", "name": "まさき", "time": "10.494"}
+      ];*/
+      var socket = io(socket_url);
+      var answer_number;
+      socket.on('chat message', function(msg){
+        if (msg.admin == false) {
+          // console.log(answers);
+        }
+        if (msg.admin == true) {
+          if(msg.type == "answer"){
+            answer_number = msg.content;
+          }
+          if(msg.type == "data-worst10"){
+            answer_data = msg.content;
+            for(i = 0; i < answer_data.length; i++){
+              answer_data[i].rank = i + 1;
+            }
+            // ワースト10内で遅い順に並べ替え
+            /* worst10.sort(function(a,b){
+              return (b.time - a.time);
+            });*/
+            worst10 = answer_data.slice(answer_data.length-10, answer_data.length);
+            console.log(worst10);
+            showResult(worst10);
+          }
+        }
+      });
+
+      $(function(){ 
+        $('.fade li').hide(); //要素
+        $('#show-result').click(function(){
+          /* showResult(answers);*/
+          socket.emit('chat message', {"admin":true, "type":"worst10", "answer":answer_number } );
+        });
+      });
+
+      function showResult(answers){
+        $('#result-table').empty();
+        $("#sound-file").get(0).play();
+        for(i = 0; i < answers.length; i++) {
+          list = i != answers.length - 1 ?
+          '<tr class="not-worst"><td class="not-worst">'+ answers[i].rank + "</td><td>" + answers[i].name + "</td><td>" + answers[i].time +"</td></tr>"
+          : '<tr><td class="worst">'+ answers[i].rank + "</td><td>" + answers[i].name + "</td><td>" + answers[i].time +"</td></tr>";
+          $(list).hide().appendTo("#result-table");
+        }
+        var delaySpeed = 7000 / (answers.length + 1);
+        var fadeSpeed = 1000;
+        $("#result-table tr").each(function(i){
+          $(this).delay(i*(delaySpeed)).css({display:'table-row',opacity:'0'}).animate({opacity:'1'},fadeSpeed);
+        });
+        $("#result-table tr:last-child").css({background:"red", color:"#333333"});
+        $("#result-table tr:last-child").fadeTo( 500, 0.25 ).fadeTo( 500, 1 )
+       .fadeTo( 500, 0.25 ).fadeTo( 500, 1 )
+       .fadeTo( 500, 0.25 ).fadeTo( 500, 1 )
+       .fadeTo( 500, 0.25 ).fadeTo( 500, 1 );
+        socket.emit('chat message', {"admin":true, "type":"worst", "name" : answers[answers.length-1].name } );
+      }
+     </script>
+  </body>
+</html>
