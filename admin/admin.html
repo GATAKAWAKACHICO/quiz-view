@@ -55,7 +55,7 @@
     <form id="quiz-load-form">
       <div class="input-group">
         <label for="csvurl">問題CSVファイルのURL</label>
-        <input type="text" class="form-control" id="csvurl" placeholder="http://183.181.174.67/quiz/quizlist.csv" value="http://183.181.174.67/quiz/quizlist.csv?version=">
+        <input type="text" class="form-control" id="csvurl" placeholder="http://IPアドレス/quiz-view/quizlist.csv" value="" pattern="^https?:\/\/.+\.csv$">
       </div>
       <div id="quiz-load-status">CSVファイルを指定してください。</div>
       <button class="btn btn-default" id="quiz-load">ファイルを読み込む</button>
@@ -189,7 +189,8 @@
       });
       $('#quiz-load-form').submit(function(){
         $("#quiz-load-status").html("読み込み中…");
-        Papa.parse($("#csvurl").val(), {
+        var csvurl = $("#csvurl").val() + "?version=" + new Date().getTime();
+        Papa.parse(csvurl, {
           download: true,
           complete: function(results) {
             csv = results;
