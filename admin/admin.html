@@ -24,7 +24,19 @@
   <body>
   <div style="padding:10px;">
     <p>現在の接続数:<span id="connection-count"></span></p>
+
+    <hr>
+
+    <p><label>常に開く必要のある3画面（プロジェクターなどで）</label><br/>
+      <a class="text-danger" href="/quiz-view/admin/quiz.html" target="_blank">クイズ表示</a><br/>
+      <a class="text-danger" href="/quiz-view/admin/worst10.html" target="_blank">早押しワースト10</a><br/>
+      <a class="text-danger" href="/quiz-view/admin/best10.html" target="_blank">早押しベスト10</a>
+    </p>
+
+    <hr>
+
     <p>
+    <label>オープニング用音源</label>
     <form id="opening-form">
       <audio id="sound-opening" preload="auto">
         <source src="../opening2.mp3" type="audio/mp3">
