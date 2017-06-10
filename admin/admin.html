@@ -102,7 +102,11 @@
     <form id="broadcast-form">
       <div class="input-group">
         <label for="quizbody">問題文</label>
-        <textarea class="form-control" id="quizbody" rows="5" cols="70"></textarea>
+        <textarea class="form-control" id="quizbody" rows="5" cols="70">問題文
+選択肢1
+選択肢2
+選択肢3
+選択肢4</textarea>
       </div>
       <div id="image-check">
       </div>
@@ -245,20 +249,24 @@
       });
       $('#broadcast-form').submit(function(){
         imageurls = [
-          'data' in csv ? csv.data[current_row][8] : "",
-          'data' in csv ? csv.data[current_row][9] : "",
-          'data' in csv ? csv.data[current_row][10] : "",
-          'data' in csv ? csv.data[current_row][11] : ""
+          "",
+          "",
+          "",
+          ""
         ];
         choices = [
-          'data' in csv ? csv.data[current_row][4] : "",
-          'data' in csv ? csv.data[current_row][5] : "",
-          'data' in csv ? csv.data[current_row][6] : "",
-          'data' in csv ? csv.data[current_row][7] : "",
+          "",
+          "",
+          "",
+          ""
         ];
+        var quizbody = $('#quizbody').val();
+        var quizbody_text = quizbody.split('\n')[0];
+        choices = quizbody.split('\n')
+        choices.shift();
         socket.emit('chat message', {"admin":true, 
           "type":"quiz", 
-          "content" : $('#quizbody').val(),
+          "content" : quizbody_text,
           "imageurls" : imageurls,
           "choices" : choices } );
         return false;
